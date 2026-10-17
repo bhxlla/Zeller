@@ -15,5 +15,6 @@ export type Customer = {
   id: string;
   name: string;
   email: string | null;
-  role: Role;
+  /** `null` when the API sent a role we don't recognise: the customer shows under "All" only. */
+  role: Role | null;
 };
