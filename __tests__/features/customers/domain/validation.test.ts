@@ -1,6 +1,7 @@
 import {
   MAX_NAME_LENGTH,
   toFullName,
+  validateEmail,
   validateFirstName,
   validateFullNameLength,
   validateLastName,
@@ -63,4 +64,24 @@ describe('validateFullNameLength', () => {
   it('ignores surrounding whitespace when counting', () => {
     expect(validateFullNameLength(`  ${'a'.repeat(50)}  `, '')).toBeNull();
   });
+});
+
+describe('validateEmail', () => {
+  it.each(['', '   '])('is optional (%p)', (value) => {
+    expect(validateEmail(value)).toBeNull();
+  });
+
+  it.each(['test1@test.com', 'first.last+tag@sub.example.com.au', '  brad@zeller.com  '])(
+    'accepts %p',
+    (value) => {
+      expect(validateEmail(value)).toBeNull();
+    },
+  );
+
+  it.each(['brad', 'brad@', '@zeller.com', 'brad@zeller', 'brad @zeller.com', 'a@b@c.com'])(
+    'rejects %p',
+    (value) => {
+      expect(validateEmail(value)).toBe('Enter a valid email address');
+    },
+  );
 });

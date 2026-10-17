@@ -2,6 +2,9 @@ export const MAX_NAME_LENGTH = 50;
 
 const LETTERS_AND_SPACES = /^[A-Za-z ]+$/;
 
+// Pragmatic check (something@domain.tld, no spaces) rather than full RFC 5322.
+const EMAIL_FORMAT = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 function validateNamePart(value: string, required: boolean): string | null {
   const trimmed = value.trim();
   if (!trimmed) return required ? 'Required' : null;
@@ -19,6 +22,13 @@ export function toFullName(firstName: string, lastName: string): string {
     .map((part) => part.trim())
     .filter(Boolean)
     .join(' ');
+}
+
+/** Email is optional; when provided it must look like a valid address. */
+export function validateEmail(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  return EMAIL_FORMAT.test(trimmed) ? null : 'Enter a valid email address';
 }
 
 export function validateFullNameLength(firstName: string, lastName: string): string | null {
