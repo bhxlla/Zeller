@@ -11,6 +11,15 @@ export type CustomerListFilter = {
 /** What the form saves. A role is required here, even though API customers may lack one. */
 export type NewCustomer = Omit<Customer, 'id' | 'role'> & { role: Role };
 
+/**
+ * Start of every read: the `Customer` fields only, never soft-deleted rows. `role` is safe to
+ * read as `Role | null`: the column's CHECK constraint allows nothing else.
+ */
+const SELECT_VISIBLE_CUSTOMERS = `
+  SELECT id, name, email, role
+  FROM customers
+  WHERE deleted_at IS NULL`;
+
 /** Escapes LIKE wildcards so user input is matched literally. */
 const escapeLike = (value: string) => value.replace(/[\\%_]/g, (char) => `\\${char}`);
 
@@ -19,12 +28,9 @@ export function createCustomerRepository(db: SQLiteDatabase) {
   return {
     /** Customers that aren't deleted, matching the filter, sorted by name. */
     list({ role, search }: CustomerListFilter): Promise<Customer[]> {
-      // `role` is safe to read as `Role | null`: the column's CHECK constraint allows nothing else.
       // A NULL role never equals a filter value, so those customers appear under 'All' only.
       return db.getAllAsync<Customer>(
-        `SELECT id, name, email, role
-         FROM customers
-         WHERE deleted_at IS NULL
+        `${SELECT_VISIBLE_CUSTOMERS}
            AND (? = 'All' OR role = ?)
            AND name LIKE ? ESCAPE '\\'
          ORDER BY name COLLATE NOCASE`,
@@ -35,9 +41,8 @@ export function createCustomerRepository(db: SQLiteDatabase) {
     /** A customer that isn't deleted, or `null` if there is none with this id. */
     getById(id: string): Promise<Customer | null> {
       return db.getFirstAsync<Customer>(
-        `SELECT id, name, email, role
-         FROM customers
-         WHERE id = ? AND deleted_at IS NULL`,
+        `${SELECT_VISIBLE_CUSTOMERS}
+           AND id = ?`,
         [id],
       );
     },
