@@ -91,6 +91,39 @@ export function createCustomerRepository(db: SQLiteDatabase) {
         throw new Error(`Customer ${id} not found`);
       }
     },
+
+    /**
+     * Applies the server's complete customer list, local wins: rows with local changes
+     * (`is_dirty = 1`, including deletes) are never overwritten or removed, and rows created in
+     * the app are never touched. Runs in one transaction, so a failure leaves the data as it was.
+     */
+    async applyRemoteSnapshot(customers: readonly Customer[]): Promise<void> {
+      await db.withExclusiveTransactionAsync(async (txn) => {
+        // Insert new customers; update existing ones only if they have no local changes.
+        for (const customer of customers) {
+          await txn.runAsync(
+            `INSERT INTO customers (id, name, email, role, source, is_dirty)
+             VALUES (?, ?, ?, ?, 'remote', 0)
+             ON CONFLICT (id) DO UPDATE SET
+               name = excluded.name,
+               email = excluded.email,
+               role = excluded.role
+             WHERE customers.is_dirty = 0`,
+            [customer.id, customer.name, customer.email, customer.role],
+          );
+        }
+
+        // Remove unchanged remote customers the server no longer has. The ids go in as one JSON
+        // array, which avoids SQLite's limit on the number of `?` placeholders.
+        await txn.runAsync(
+          `DELETE FROM customers
+           WHERE source = 'remote'
+             AND is_dirty = 0
+             AND id NOT IN (SELECT value FROM json_each(?))`,
+          [JSON.stringify(customers.map((customer) => customer.id))],
+        );
+      });
+    },
   };
 }
 
