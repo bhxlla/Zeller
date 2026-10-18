@@ -1,15 +1,12 @@
 import { randomUUID } from 'expo-crypto';
-import type { SQLiteDatabase } from 'expo-sqlite';
+import { addDatabaseChangeListener, type SQLiteDatabase } from 'expo-sqlite';
 
-import type { Customer, Role, RoleFilter } from '../domain/customer';
+import type { Customer, NewCustomer, RoleFilter } from '../domain/customer';
 
 export type CustomerListFilter = {
   role: RoleFilter;
   search: string;
 };
-
-/** What the form saves. A role is required here, even though API customers may lack one. */
-export type NewCustomer = Omit<Customer, 'id' | 'role'> & { role: Role };
 
 /**
  * Start of every read: the `Customer` fields only, never soft-deleted rows. `role` is safe to

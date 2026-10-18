@@ -19,6 +19,8 @@ export type Customer = {
   role: Role | null;
 };
 
+export type NewCustomer = Omit<Customer, 'id' | 'role'> & { role: Role };
+
 /** Customers shown under a tab: everyone for 'All', otherwise only that role. */
 export function filterByRole(customers: readonly Customer[], filter: RoleFilter): Customer[] {
   return filter === 'All' ? [...customers] : customers.filter((c) => c.role === filter);
