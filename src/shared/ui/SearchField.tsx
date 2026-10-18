@@ -3,7 +3,7 @@ import { StyleSheet, TextInput, View } from 'react-native';
 
 import { colors, radii, sizes, spacing, typography } from '@/shared/theme';
 
-import { IconButton } from './IconButton';
+import IconButton from './IconButton';
 
 type Props = {
   value: string;
@@ -14,7 +14,7 @@ type Props = {
 };
 
 /** A pill-shaped search input that focuses when shown, with a close button. */
-export function SearchField({ value, onChangeText, onClose, placeholder }: Props) {
+function SearchField({ value, onChangeText, onClose, placeholder }: Props) {
   return (
     <View style={styles.field}>
       <MaterialIcons name="search" size={20} color={colors.textMuted} />
@@ -53,3 +53,5 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
 });
+
+export default SearchField;

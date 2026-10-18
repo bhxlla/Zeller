@@ -13,7 +13,7 @@ type Props = {
 };
 
 /** A tappable icon with a comfortable touch area. */
-export function IconButton({ icon, accessibilityLabel, onPress, color = colors.primary }: Props) {
+function IconButton({ icon, accessibilityLabel, onPress, color = colors.primary }: Props) {
   return (
     <Pressable
       onPress={onPress}
@@ -40,3 +40,5 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
 });
+
+export default IconButton;

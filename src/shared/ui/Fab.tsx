@@ -13,7 +13,7 @@ type Props = {
 };
 
 /** Floating action button, pinned to the bottom-right corner above the home indicator. */
-export function Fab({ icon, accessibilityLabel, onPress }: Props) {
+function Fab({ icon, accessibilityLabel, onPress }: Props) {
   const { bottom } = useSafeAreaInsets();
   const fabStyle = useCallback(
     ({ pressed }: PressableStateCallbackType) => [
@@ -51,3 +51,5 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
 });
+
+export default Fab;

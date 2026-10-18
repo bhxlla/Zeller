@@ -9,10 +9,12 @@ const DATABASE_NAME = 'zeller.db';
 const options: SQLiteOpenOptions = { enableChangeListener: true };
 
 /** Opens the database and runs migrations before rendering children. */
-export function DatabaseProvider({ children }: PropsWithChildren) {
+function DatabaseProvider({ children }: PropsWithChildren) {
   return (
     <SQLiteProvider databaseName={DATABASE_NAME} onInit={migrate} options={options}>
       {children}
     </SQLiteProvider>
   );
 }
+
+export default DatabaseProvider;

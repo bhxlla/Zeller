@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { type LayoutChangeEvent, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   type SharedValue,
@@ -24,12 +24,7 @@ type Props<T extends string> = {
 };
 
 /** A row of equal-width options with a pill indicator that slides to the selected one. */
-export function SegmentedControl<T extends string>({
-  options,
-  value,
-  onChange,
-  position,
-}: Props<T>) {
+function SegmentedControl<T extends string>({ options, value, onChange, position }: Props<T>) {
   const selectedIndex = options.indexOf(value);
   const ownPosition = useSharedValue(selectedIndex);
   const indicatorPosition = position ?? ownPosition;
@@ -71,11 +66,7 @@ type SegmentProps<T extends string> = {
   onSelect: (option: T) => void;
 };
 
-const Segment = memo(function Segment<T extends string>({
-  option,
-  isSelected,
-  onSelect,
-}: SegmentProps<T>) {
+function Segment<T extends string>({ option, isSelected, onSelect }: SegmentProps<T>) {
   const handlePress = useCallback(() => onSelect(option), [onSelect, option]);
   const accessibilityState = useMemo(() => ({ selected: isSelected }), [isSelected]);
 
@@ -90,7 +81,7 @@ const Segment = memo(function Segment<T extends string>({
       <Text style={isSelected ? styles.selectedLabel : styles.label}>{option}</Text>
     </Pressable>
   );
-}) as <T extends string>(props: SegmentProps<T>) => React.JSX.Element;
+}
 
 const styles = StyleSheet.create({
   track: {
@@ -123,3 +114,5 @@ const styles = StyleSheet.create({
     color: colors.primary,
   },
 });
+
+export default SegmentedControl;
