@@ -6,17 +6,17 @@ only ever reads from the database, so everything works offline.
 
 ## Requirements checklist
 
-| Requirement                                        | Where                                                                                |
-| -------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| Fetch with `listZellerCustomers`                   | `features/customers/api/listZellerCustomers.ts` (paginated via `nextToken`)          |
-| Store in a local database, display from it         | SQLite via `expo-sqlite`: `features/customers/data/customerRepository.ts`            |
-| Add, update, delete locally                        | `CustomerFormScreen` + `useCustomerForm`                                             |
-| Validation (required, letters/spaces, ≤ 50, email) | `features/customers/domain/validation.ts`                                            |
-| Filter by role, search by name                     | Tabs + search on `CustomerListScreen`                                                |
-| Pull to refresh                                    | `CustomerSectionList`                                                                |
-| Pager swipe with animated tabs                     | `react-native-pager-view` + Reanimated; the tab indicator follows the swipe position |
-| iOS and Android                                    | Tested on the iOS simulator and the Android emulator                                 |
-| Tests                                              | Unit + integration tests in `__tests__/` (see [Testing](#testing))                   |
+| Requirement                                        | Where                                                                                        |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Fetch with `listZellerCustomers`                   | `features/customers/api/listZellerCustomers.ts` (paginated via `nextToken`)                  |
+| Store in a local database, display from it         | SQLite via `expo-sqlite`: `features/customers/data/customerRepository.ts`                    |
+| Add, update, delete locally                        | `CustomerFormScreen` + `useCustomerForm`                                                     |
+| Validation (required, letters/spaces, ≤ 50, email) | `features/customers/domain/validation.ts`                                                    |
+| Filter by role, search by name                     | Tabs + search on `CustomerListScreen`                                                        |
+| Pull to refresh                                    | `CustomerSectionList`                                                                        |
+| Pager swipe with animated tabs                     | `react-native-pager-view` + Reanimated; the tab indicator follows the swipe position         |
+| iOS and Android                                    | Tested on an iPhone 17 Pro simulator (iOS 26) and a Pixel emulator (API 33)                  |
+| Tests                                              | Unit + integration tests in `__tests__/`, E2E flows in `.maestro/` (see [Testing](#testing)) |
 
 ## Getting started
 
@@ -27,20 +27,17 @@ only ever reads from the database, so everything works offline.
 - Android: Android Studio with an emulator, JDK 17, and `adb` on your `PATH`
   (see Expo's [environment setup](https://docs.expo.dev/get-started/set-up-your-environment/?mode=development-build&buildEnv=local))
 - No global Expo or EAS CLI needed: the Expo CLI comes with the project's dependencies
-- The `mock-server` folder from the challenge
 
-### 1. Start the mock GraphQL server
+### 1. Start the mock server
 
-The mock server's `package.json` doesn't list `graphql`, which its Apollo packages need, so it
-fails to start with `ERR_MODULE_NOT_FOUND ... 'graphql'`. In the `mock-server` folder, add it
-once (this also installs the other dependencies), then start the server:
+It lives in the challenge repository, whose `package.json` is missing `graphql`:
 
 ```bash
+git clone https://github.com/zeller-public/zeller-rn-codechallenge.git
+cd zeller-rn-codechallenge/mock-server
 yarn add graphql@^16
-yarn start             # http://localhost:9002/
+node index.js          # http://localhost:9002/
 ```
-
-The AppSync key in `aws-exports.js` has expired, so the app uses the mock server by default.
 
 ### 2. Run the app
 
@@ -78,14 +75,9 @@ EXPO_PUBLIC_GRAPHQL_API_KEY=<aws_appsync_apiKey>
 Use `.env.local` rather than editing `.env`: `.env` is committed, so a key put there would end up
 in git.
 
-Then restart with a cleared cache, because `EXPO_PUBLIC_*` values are inlined into the bundle:
-`yarn start --clear` (or run `yarn ios` / `yarn android` again). The mock server isn't needed.
-Delete `.env.local` to switch back.
-
-The key is sent as the `x-api-key` header. With the provided (expired) key the sync fails, and
-the app keeps showing saved customers with a "Couldn't refresh" message. Note that
-`EXPO_PUBLIC_*` values are bundled into the app, which is acceptable for an AppSync API key but
-not for real secrets.
+Restart with `yarn start --clear` (or run `yarn ios` / `yarn android` again), since env values
+are bundled at build time. Delete `.env.local` to switch back. The provided key has expired, so
+the sync fails and the app shows its saved customers.
 
 ## Scripts
 
@@ -113,17 +105,22 @@ implementation details.
 | ----------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------ |
 | Unit        | Validation rules, form mapping, A–Z grouping, role filter, API mapping, sync paging rules | `__tests__/features/customers/{domain,api,data}` |
 | Integration | Both screens rendered inside the real navigator, driven like a user (tap, type, refresh)  | `__tests__/features/customers/screens`           |
+| E2E         | The real app on a simulator/emulator, with real SQLite and the mock server (Maestro)      | `.maestro/`                                      |
 
-The integration tests render the whole app with an **in-memory repository** and a **fake API**,
-injected through `CustomersProvider`. No module of our own is `jest.mock`ed; the only stub is the
-native `Alert`. They cover listing, tabs, search, empty and offline states, pull to refresh,
-create/edit/delete, validation, and local edits surviving a sync.
+Integration tests render the whole app against an in-memory repository and a fake API, injected
+through `CustomersProvider`. The real SQL runs only in the E2E flows, as Jest has no SQLite engine.
 
-**Not covered by Jest:** the SQL inside `customerRepository.ts` (the local-wins upsert, soft
-delete and sweep). Jest runs in Node, which has no SQLite engine without an extra dependency, so
-the screens are tested against a fake that follows the same rules. The SQL was verified manually
-with the `sqlite3` CLI and on both platforms. Next step: an E2E flow (e.g. Maestro) on a simulator
-covering "edit → refresh → the edit survives" and "delete → refresh → it stays deleted".
+### E2E (Maestro)
+
+Five [Maestro](https://maestro.mobile.dev) flows run the real app on a simulator or emulator,
+covering local-wins sync, soft delete, create and the role tabs. Four (`regression`) rely on the
+mock server's data; one (`smoke`) creates and removes its own customer, so it works against any
+server. All pass on an iPhone 17 Pro simulator (iOS 26) and a Pixel emulator (Android API 33).
+
+```bash
+maestro test .maestro                        # all flows (mock server)
+maestro test --include-tags smoke .maestro   # the server-independent flow only
+```
 
 ## Architecture
 
@@ -186,12 +183,12 @@ The API is read-only (the brief requires no mutations), so local changes must su
 | Names are letters A–Z and spaces only | As the brief says. So the mock data (`TestCustomer1`) displays fine but fails validation if edited, which is intended.                                                   |
 | Email                                 | Optional; a pragmatic `something@domain.tld` check rather than full RFC 5322.                                                                                            |
 | No paging of the local list           | `SectionList` virtualises rendering, so only visible rows are drawn. Keyset pagination in SQL would be the upgrade path for very large lists.                            |
-| No NetInfo                            | "Offline" is handled by the request failing, which also covers captive portals and connected-but-no-internet; NetInfo adds nothing required.                             |
-| ESLint pinned to 9                    | `eslint-plugin-react` (via `eslint-config-expo`) doesn't support ESLint 10 yet.                                                                                          |
 
 ## What I'd add next
 
 - **Push local changes** once the API has mutations: queue dirty rows and send them (an outbox).
 - **Sync again** automatically when the app returns to the foreground or the network comes back.
-- **E2E tests** (Maestro) covering the real SQLite behaviour on a device.
+- **Run the E2E flows in CI** on every pull request (e.g. Maestro Cloud or an emulator on CI).
+- **Mark-and-sweep sync** for large customer lists: save each page as it arrives and remove stale
+  rows only after a complete pass, instead of holding every page in memory.
 - **GraphQL codegen** from `schema.gql` once there are more operations.
