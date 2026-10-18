@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { graphqlClient } from '@/core/graphql/client';
 import { toError } from '@/shared/utils/toError';
 
-import { fetchCustomerPage } from '../api/listZellerCustomers';
+import { useCustomersDependencies } from '../data/CustomersContext';
 import { createCustomerSync } from '../data/syncService';
-import { useCustomerRepository } from './useCustomerRepository';
 
 /** `Error` is the last sync's failure; local data stays usable, and the next sync retries. */
 export type SyncStatus = 'idle' | 'syncing' | Error;
@@ -18,14 +16,10 @@ type CustomerSync = {
 
 /** Syncs customers once on mount, and exposes `refresh` for pull-to-refresh. */
 export function useCustomerSync(): CustomerSync {
-  const repository = useCustomerRepository();
+  const { repository, fetchPage } = useCustomersDependencies();
   const syncCustomers = useMemo(
-    () =>
-      createCustomerSync({
-        fetchPage: (nextToken) => fetchCustomerPage(graphqlClient, nextToken),
-        repository,
-      }),
-    [repository],
+    () => createCustomerSync({ fetchPage, repository }),
+    [fetchPage, repository],
   );
 
   const [status, setStatus] = useState<SyncStatus>('idle');

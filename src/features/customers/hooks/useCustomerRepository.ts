@@ -1,10 +1,6 @@
-import { useSQLiteContext } from 'expo-sqlite';
-import { useMemo } from 'react';
+import { useCustomersDependencies } from '../data/CustomersContext';
 
-import { createCustomerRepository } from '../data/customerRepository';
-
-/** The customer repository for the app's database. Must be used inside `DatabaseProvider`. */
+/** The customer repository. Must be used inside `CustomersProvider`. */
 export function useCustomerRepository() {
-  const db = useSQLiteContext();
-  return useMemo(() => createCustomerRepository(db), [db]);
+  return useCustomersDependencies().repository;
 }
