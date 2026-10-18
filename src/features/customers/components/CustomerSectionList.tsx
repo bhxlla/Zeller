@@ -26,7 +26,9 @@ type Props = {
 const keyExtractor = (customer: Customer) => customer.id;
 
 const renderSectionHeader = ({ section }: { section: CustomerSection }) => (
-  <Text style={styles.sectionHeader}>{section.title}</Text>
+  <Text style={styles.sectionHeader} accessibilityRole="header">
+    {section.title}
+  </Text>
 );
 
 const refreshColors = [colors.primary];
@@ -58,6 +60,7 @@ function CustomerSectionList({
 
   return (
     <SectionList
+      testID="customer-list"
       sections={sections}
       keyExtractor={keyExtractor}
       renderItem={renderItem}

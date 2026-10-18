@@ -121,8 +121,15 @@ function CustomerListScreen({ navigation }: RootStackScreenProps<'CustomerList'>
           onPageScroll={onPageScroll}
           onPageSelected={onPageSelected}
         >
+          {/* Neighbouring pages stay mounted; hide them so screen readers only read this tab. */}
           {pages.map(({ filter, sections }) => (
-            <View key={filter} style={styles.pager} collapsable={false}>
+            <View
+              key={filter}
+              style={styles.pager}
+              collapsable={false}
+              accessibilityElementsHidden={filter !== role}
+              importantForAccessibility={filter === role ? 'auto' : 'no-hide-descendants'}
+            >
               <CustomerSectionList
                 sections={sections}
                 onPressCustomer={openCustomer}
