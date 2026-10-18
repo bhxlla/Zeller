@@ -10,7 +10,7 @@ module.exports = defineConfig([
   },
   expoConfig,
   {
-    files: ['**/*.test.{ts,tsx}', 'jest.setup.ts'],
+    files: ['__tests__/**', 'jest.setup.ts'],
     languageOptions: { globals: globals.jest },
   },
   // Keep last: turns off stylistic rules that would conflict with Prettier.
