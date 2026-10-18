@@ -83,6 +83,26 @@ describe('CustomerFormScreen', () => {
       expect(await screen.findByText('Bob Stone')).toBeOnTheScreen();
       expect(screen.queryByText('Zoe')).not.toBeOnTheScreen();
     });
+
+    it('keeps a customer created offline once the server list arrives', async () => {
+      const user = userEvent.setup();
+      const { fetchPage } = await renderApp({ server: new Error('Network down') });
+      await screen.findByRole('alert');
+
+      await user.press(screen.getByLabelText('Add customer'));
+      await user.type(await screen.findByLabelText('First Name'), 'Zoe');
+      await user.press(screen.getByRole('tab', { name: 'Admin' }));
+      await user.press(screen.getByRole('button', { name: 'Create User' }));
+      expect(await screen.findByText('Zoe')).toBeOnTheScreen();
+
+      // Back online: the server's list doesn't include Zoe.
+      fetchPage.mockResolvedValueOnce({ items: [bob], nextToken: null });
+      await fireEvent(screen.getByTestId('customer-list'), 'refresh');
+
+      expect(await screen.findByText('Bob Stone')).toBeOnTheScreen();
+      expect(screen.getByText('Zoe')).toBeOnTheScreen();
+      expect(screen.queryByRole('alert')).not.toBeOnTheScreen();
+    });
   });
 
   describe('editing', () => {

@@ -98,7 +98,7 @@ the sync fails and the app shows its saved customers.
 yarn test
 ```
 
-98 tests, about 82% line coverage. Tests describe behaviour a user or caller can observe, not
+99 tests, about 82% line coverage. Tests describe behaviour a user or caller can observe, not
 implementation details.
 
 | Kind        | What                                                                                      | Where                                            |
