@@ -1,0 +1,33 @@
+# Local wins: an edited customer keeps its changes when the server sends the old version again,
+# both on pull to refresh and on the sync that runs when the app starts.
+appId: com.anonymous.ZellerCustomers
+tags:
+  - regression # needs the mock server's data
+---
+- launchApp:
+    clearState: true
+- tapOn: 'TestCustomer1'
+- assertVisible: 'Edit User'
+
+# "TestCustomer1" contains digits, so it has to be renamed to pass validation.
+- tapOn: 'First Name'
+- eraseText
+- inputText: 'Ann'
+- tapOn: 'Last Name'
+- inputText: 'Lee'
+- tapOn: 'Save Changes'
+- assertVisible: 'Ann Lee'
+- assertNotVisible: 'TestCustomer1'
+
+# Pull to refresh: the mock server still returns "TestCustomer1".
+- swipe:
+    direction: DOWN
+- waitForAnimationToEnd
+- assertVisible: 'Ann Lee'
+- assertNotVisible: 'TestCustomer1'
+
+# Restart without clearing data: the edit is still in SQLite after the launch sync.
+- stopApp
+- launchApp
+- assertVisible: 'Ann Lee'
+- assertNotVisible: 'TestCustomer1'

@@ -1,0 +1,45 @@
+# Create a customer, then swipe the pager between role tabs: each page shows only its role.
+appId: com.anonymous.ZellerCustomers
+tags:
+  - regression # needs the mock server's data
+---
+- launchApp:
+    clearState: true
+- assertVisible: 'TestCustomer1' # first sync done
+- tapOn: 'Add customer'
+- assertVisible: 'New User'
+
+# Type straight through like a user: Next moves to the next field, Done on Email closes the
+# keyboard. (No `hideKeyboard`: on Android it presses back, which would leave the form.)
+- tapOn: 'First Name'
+- inputText: 'Zoe'
+- pressKey: Enter # Next → Last Name
+- inputText: 'Park'
+- pressKey: Enter # Next → Email
+- inputText: 'zoe@example.com'
+- pressKey: Enter # Done → keyboard closes
+- tapOn: 'Admin'
+- tapOn: 'Create User'
+
+# All tab: the new customer is listed alongside the synced ones.
+- assertVisible: 'Zoe Park, Admin'
+- assertVisible: 'TestCustomer1'
+
+# Swipe to the Admin page: admins only.
+- swipe:
+    direction: LEFT
+- assertVisible:
+    text: 'Admin'
+    selected: true
+- assertVisible: 'Zoe Park, Admin'
+- assertVisible: 'TestCustomer2, Admin'
+- assertNotVisible: 'TestCustomer1'
+
+# Swipe to the Manager page: managers only.
+- swipe:
+    direction: LEFT
+- assertVisible:
+    text: 'Manager'
+    selected: true
+- assertVisible: 'TestCustomer1'
+- assertNotVisible: 'Zoe Park, Admin'

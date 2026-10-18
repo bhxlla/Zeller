@@ -1,0 +1,62 @@
+# Server-independent smoke test: works against the mock server, staging or production.
+# It checks that the sync loads data, then creates, edits and deletes its own customer, so it
+# never depends on what the server returns. The API is read-only: nothing leaves the device.
+appId: com.anonymous.ZellerCustomers
+tags:
+  - smoke # safe against any server
+---
+- launchApp:
+    clearState: true # empty database: anything listed must have come from the server
+
+# The sync worked: a section header (a single letter, or "#") means the list has rows.
+- extendedWaitUntil:
+    visible: '[A-Z#]'
+    timeout: 15000
+- assertNotVisible: "Couldn't refresh. Showing saved customers."
+
+# Create a customer with a name that can't clash with real data.
+- tapOn: 'Add customer'
+- tapOn: 'First Name'
+- inputText: 'Maestro'
+- pressKey: Enter # Next → Last Name
+- inputText: 'Smoke'
+- pressKey: Enter # Next → Email
+- pressKey: Enter # Done → keyboard closes
+- tapOn: 'Manager'
+- tapOn: 'Create User'
+
+# Find it by search, since a real list may be too long to show it on screen. The query is only
+# part of the name, so the search field's own text can't satisfy the assertion.
+- tapOn: 'Search customers'
+- tapOn: 'Search by name'
+- waitForAnimationToEnd # typing while the keyboard opens can be lost on Android
+- inputText: 'Maestro'
+- assertVisible: 'Maestro' # the field's own text: the search really was typed
+- assertVisible: 'Maestro Smoke'
+
+# Change its role.
+- tapOn: 'Maestro Smoke'
+- assertVisible: 'Edit User'
+- tapOn: 'Admin'
+- tapOn: 'Save Changes'
+- assertVisible: 'Maestro Smoke, Admin'
+
+# Delete it.
+- tapOn: 'Maestro Smoke, Admin'
+- tapOn: 'Delete User'
+- assertVisible: 'Delete user?'
+- tapOn: 'Delete'
+- assertVisible: 'No customers match "Maestro".'
+
+# Reopen without clearing data: it's still gone.
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible: '[A-Z#]'
+    timeout: 15000
+- tapOn: 'Search customers'
+- tapOn: 'Search by name'
+- waitForAnimationToEnd
+- inputText: 'Maestro'
+- assertVisible: 'Maestro'
+- assertVisible: 'No customers match "Maestro".'

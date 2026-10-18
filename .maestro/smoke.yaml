@@ -1,0 +1,13 @@
+# First sync: a fresh install syncs the mock server's customers into SQLite and lists them.
+# Needs the mock server running and the app installed (`yarn ios` / `yarn android`).
+appId: com.anonymous.ZellerCustomers
+tags:
+  - regression # needs the mock server's data
+---
+- launchApp:
+    clearState: true # wipe app data: starts with an empty database
+# Rows are matched by their accessibility label, which adds the role for admins.
+- assertVisible: 'TestCustomer1'
+- assertVisible: 'TestCustomer2, Admin'
+- assertVisible: 'TestCustomer3'
+- assertVisible: 'TestCustomer4, Admin'

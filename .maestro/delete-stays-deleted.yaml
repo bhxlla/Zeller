@@ -1,0 +1,30 @@
+# Soft delete: a deleted customer doesn't come back when the server still returns it, either on
+# pull to refresh or on the sync that runs when the app starts.
+appId: com.anonymous.ZellerCustomers
+tags:
+  - regression # needs the mock server's data
+---
+- launchApp:
+    clearState: true
+- tapOn: 'TestCustomer3'
+- assertVisible: 'Edit User'
+- tapOn: 'Delete User'
+
+# Native confirmation alert.
+- assertVisible: 'Delete user?'
+- tapOn: 'Delete'
+- assertVisible: 'TestCustomer1' # back on the list
+- assertNotVisible: 'TestCustomer3'
+
+# Pull to refresh: the mock server still returns TestCustomer3.
+- swipe:
+    direction: DOWN
+- waitForAnimationToEnd
+- assertVisible: 'TestCustomer1'
+- assertNotVisible: 'TestCustomer3'
+
+# Restart without clearing data: the tombstone is still in SQLite after the launch sync.
+- stopApp
+- launchApp
+- assertVisible: 'TestCustomer1'
+- assertNotVisible: 'TestCustomer3'
