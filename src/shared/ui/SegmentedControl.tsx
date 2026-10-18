@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { type LayoutChangeEvent, Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   type SharedValue,
@@ -13,7 +13,8 @@ const SLIDE_DURATION_MS = 250;
 
 type Props<T extends string> = {
   options: readonly T[];
-  value: T;
+  /** `null` selects nothing and hides the indicator, e.g. a choice the user hasn't made yet. */
+  value: T | null;
   onChange: (value: T) => void;
   /**
    * Where the indicator is, in option indexes (e.g. 1.5 = halfway between the 2nd and 3rd).
@@ -25,16 +26,21 @@ type Props<T extends string> = {
 
 /** A row of equal-width options with a pill indicator that slides to the selected one. */
 function SegmentedControl<T extends string>({ options, value, onChange, position }: Props<T>) {
-  const selectedIndex = options.indexOf(value);
-  const ownPosition = useSharedValue(selectedIndex);
+  const selectedIndex = value === null ? -1 : options.indexOf(value);
+  const hasSelection = selectedIndex !== -1;
+  const ownPosition = useSharedValue(Math.max(selectedIndex, 0));
   const indicatorPosition = position ?? ownPosition;
   const segmentWidth = useSharedValue(0);
+  const hadSelection = useRef(hasSelection);
 
   useEffect(() => {
-    if (!position) {
-      ownPosition.value = withTiming(selectedIndex, { duration: SLIDE_DURATION_MS });
-    }
-  }, [position, ownPosition, selectedIndex]);
+    if (position || !hasSelection) return;
+    // The first selection appears in place; later ones slide.
+    ownPosition.value = hadSelection.current
+      ? withTiming(selectedIndex, { duration: SLIDE_DURATION_MS })
+      : selectedIndex;
+    hadSelection.current = true;
+  }, [position, ownPosition, selectedIndex, hasSelection]);
 
   const onLayout = useCallback(
     (event: LayoutChangeEvent) => {
@@ -52,7 +58,7 @@ function SegmentedControl<T extends string>({ options, value, onChange, position
 
   return (
     <View style={styles.track} onLayout={onLayout} accessibilityRole="tablist">
-      <Animated.View style={trackIndicatorStyle} />
+      {hasSelection ? <Animated.View style={trackIndicatorStyle} /> : null}
       {options.map((option) => (
         <Segment key={option} option={option} isSelected={option === value} onSelect={onChange} />
       ))}
