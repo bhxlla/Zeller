@@ -11,7 +11,8 @@ export const OTHER_SECTION_TITLE = '#';
 const compareNames = (a: Customer, b: Customer) =>
   a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
 
-function initialOf(name: string): string {
+/** The uppercase first letter of a name, or `#` if it doesn't start with a letter. */
+export function initialOf(name: string): string {
   const initial = name.trim().charAt(0).toUpperCase();
   return /^[A-Z]$/.test(initial) ? initial : OTHER_SECTION_TITLE;
 }

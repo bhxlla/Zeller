@@ -18,3 +18,8 @@ export type Customer = {
   /** `null` when the API sent a role we don't recognise: the customer shows under "All" only. */
   role: Role | null;
 };
+
+/** Customers shown under a tab: everyone for 'All', otherwise only that role. */
+export function filterByRole(customers: readonly Customer[], filter: RoleFilter): Customer[] {
+  return filter === 'All' ? [...customers] : customers.filter((c) => c.role === filter);
+}
