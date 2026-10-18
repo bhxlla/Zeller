@@ -57,24 +57,26 @@ the mock server on your machine.
 
 ### Environment
 
-| File           | Purpose                                                           |
-| -------------- | ----------------------------------------------------------------- |
-| `.env`         | Committed defaults: the local mock server, no API key             |
-| `.env.example` | Documents every variable                                          |
-| `.env.local`   | Your overrides (gitignored), e.g. a physical device or a real API |
+| File         | Purpose                                                                          |
+| ------------ | -------------------------------------------------------------------------------- |
+| `.env`       | Committed defaults (the local mock server, no API key); documents every variable |
+| `.env.local` | Your overrides (gitignored), e.g. a physical device or the live API              |
 
 On a **physical device**, set `EXPO_PUBLIC_GRAPHQL_URL` in `.env.local` to your machine's LAN IP,
 e.g. `http://192.168.1.10:9002/`.
 
 ### Using the live API
 
-No code changes are needed. Create `.env.local` with the values from the challenge's
-`aws-exports.js`:
+No code changes are needed. Copy the two commented "Live AppSync API" lines from `.env` into a
+new `.env.local`, uncommented, with the values from the challenge's `aws-exports.js`:
 
 ```bash
 EXPO_PUBLIC_GRAPHQL_URL=<aws_appsync_graphqlEndpoint>
 EXPO_PUBLIC_GRAPHQL_API_KEY=<aws_appsync_apiKey>
 ```
+
+Use `.env.local` rather than editing `.env`: `.env` is committed, so a key put there would end up
+in git.
 
 Then restart with a cleared cache, because `EXPO_PUBLIC_*` values are inlined into the bundle:
 `yarn start --clear` (or run `yarn ios` / `yarn android` again). The mock server isn't needed.
