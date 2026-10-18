@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { useTableVersion } from '@/core/db/useTableVersion';
+import { useChangeVersion } from '@/shared/hooks/useChangeVersion';
 import type { ListState } from '@/shared/types/ListState';
 import { toError } from '@/shared/utils/toError';
 
@@ -10,12 +10,12 @@ import { useCustomerRepository } from './useCustomerRepository';
 
 /**
  * Customers matching the filter, read from the local database. Re-reads whenever the
- * `customers` table changes, so adds, edits, deletes and syncs show up without a manual refresh.
- * `'loading'` only appears before the first result; later reloads keep the current list.
+ * repository reports a change, so adds, edits, deletes and syncs show up without a manual
+ * refresh. `'loading'` only appears before the first result; later reloads keep the current list.
  */
 export function useCustomers({ role, search }: CustomerListFilter): ListState<Customer> {
   const repository = useCustomerRepository();
-  const version = useTableVersion('customers');
+  const version = useChangeVersion(repository.subscribe);
   const [state, setState] = useState<ListState<Customer>>('loading');
 
   useEffect(() => {

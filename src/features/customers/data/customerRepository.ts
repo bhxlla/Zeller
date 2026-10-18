@@ -44,6 +44,18 @@ export function createCustomerRepository(db: SQLiteDatabase) {
       );
     },
 
+    /**
+     * Calls `onChange` whenever customer rows change, whoever changed them (form, sync). Fires
+     * once per changed row, so callers should batch. Returns a function that unsubscribes.
+     * Requires `enableChangeListener` on the database.
+     */
+    subscribe(onChange: () => void): () => void {
+      const subscription = addDatabaseChangeListener((event) => {
+        if (event.tableName === 'customers') onChange();
+      });
+      return () => subscription.remove();
+    },
+
     /** Adds a customer created in the app. Local-only: never sent to the API. */
     async create(input: NewCustomer): Promise<Customer> {
       const customer: Customer = { id: randomUUID(), ...input };
