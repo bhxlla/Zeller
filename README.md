@@ -139,6 +139,22 @@ src/
     └── screens/         List and form screens
 ```
 
+### Modularity and scaling
+
+- **Feature folders.** Everything about customers lives in `features/customers/`. A new feature
+  (e.g. transactions) gets its own folder with the same layers and reuses `shared/` and `core/`;
+  `app/` is the only place that wires features together.
+- **Dependencies point inwards.** Screens use hooks, hooks use the repository and domain, and
+  `domain/` is plain TypeScript with no React or React Native, so its rules are unit-tested in
+  isolation.
+- **Storage and API are swappable.** Hooks depend on the repository and `fetchPage` interfaces
+  injected through `CustomersProvider`, not on SQLite or Apollo, so replacing either (e.g. with an
+  ORM or a different client) only touches `data/` and `app/`.
+- **The schema evolves safely** through append-only, versioned migrations.
+- **Data volume.** A–Z sorting uses an index, the list is virtualised, and the sync pages through
+  the API with guards. For very large lists, the next steps are keyset pagination, mark-and-sweep
+  sync, and full-text search (SQLite FTS5) instead of `LIKE '%…%'`.
+
 ### Data flow
 
 ```
@@ -170,6 +186,22 @@ The API is read-only (the brief requires no mutations), so local changes must su
   applies them in one transaction. If anything fails, the database is left unchanged and the list
   shows "Couldn't refresh. Showing saved customers."
 
+## Dependencies
+
+| Package                                                                         | Why                                                                               |
+| ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `expo-sqlite`                                                                   | Local database, the app's source of truth; its change listener refreshes the list |
+| `@apollo/client`, `graphql` (`rxjs` is Apollo's peer)                           | GraphQL client for `listZellerCustomers`                                          |
+| `@react-navigation/*`, `react-native-screens`, `react-native-safe-area-context` | Native stack navigation and safe areas                                            |
+| `react-native-pager-view`                                                       | Swiping between the role tabs, as the brief suggests                              |
+| `react-native-reanimated` (+ `react-native-worklets`)                           | Tab indicator that follows the swipe, on the UI thread                            |
+| `expo-crypto`                                                                   | `randomUUID()` for customers created in the app                                   |
+| `@expo/vector-icons` (+ `expo-font`)                                            | Material icons                                                                    |
+| `expo-status-bar`                                                               | Status bar style                                                                  |
+
+Dev only: TypeScript, ESLint + Prettier, Jest (`jest-expo`) and React Native Testing Library.
+Maestro is a separate CLI, not a dependency.
+
 ## Decisions and trade-offs
 
 | Decision                              | Why                                                                                                                                                                      |
@@ -192,3 +224,8 @@ The API is read-only (the brief requires no mutations), so local changes must su
 - **Mark-and-sweep sync** for large customer lists: save each page as it arrives and remove stale
   rows only after a complete pass, instead of holding every page in memory.
 - **GraphQL codegen** from `schema.gql` once there are more operations.
+
+## How I worked
+
+I used an AI assistant (Claude Code) in small, reviewed steps: I made the design decisions,
+reviewed and committed each change myself, and verified everything on both platforms.
