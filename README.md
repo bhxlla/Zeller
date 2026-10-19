@@ -4,6 +4,10 @@ A React Native app (Expo SDK 54, TypeScript) that syncs customers from the Zelle
 a local SQLite database, and lets you browse, filter, search, add, edit and delete them. The UI
 only ever reads from the database, so everything works offline.
 
+| List                                  | Search                                  | New user                                  | Edit user                                  |
+| ------------------------------------- | --------------------------------------- | ----------------------------------------- | ------------------------------------------ |
+| <img src="docs/list.png" width="200"> | <img src="docs/search.png" width="200"> | <img src="docs/new-user.png" width="200"> | <img src="docs/edit-user.png" width="200"> |
+
 ## Requirements checklist
 
 | Requirement                                        | Where                                                                                        |
